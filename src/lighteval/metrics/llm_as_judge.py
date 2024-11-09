@@ -117,9 +117,9 @@ class JudgeLM:
                 if self.pipe is None:
                     import torch
                     from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-
+                   
                     transformers_model = AutoModelForCausalLM.from_pretrained(
-                        self.model, torch_dtype=torch.float16, trust_remote_code=False, device_map="cuda"
+                        self.model, torch_dtype=torch.float32, trust_remote_code=False, device_map="cuda"
                     )
                     tokenizer = AutoTokenizer.from_pretrained(self.model)
                     self.pipe = pipeline(
@@ -127,6 +127,7 @@ class JudgeLM:
                         model=transformers_model,
                         tokenizer=tokenizer,
                         max_new_tokens=256,
+                        
                     )
                 return self.__call_transformers
             case _:
