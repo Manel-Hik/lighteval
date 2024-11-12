@@ -96,16 +96,20 @@ alrage_qa_task = LightevalTaskConfig(
 TASKS_TABLE = [alrage_qa_task]
 
 if __name__ == "__main__":
-   
+    # Example usage
     question = "ما هو تأثير التلوث على البيئة البحرية؟"
     context = """التلوث البحري له آثار مدمرة على النظام البيئي البحري. يؤدي إلى موت الكائنات البحرية وتدمير الشعاب المرجانية. كما يؤثر على سلسلة الغذاء البحرية بأكملها."""
     answer = "التلوث يؤدي إلى موت الكائنات البحرية وتدمير الشعاب المرجانية"
     gold = "التلوث البحري يدمر النظام البيئي البحري من خلال قتل الكائنات البحرية وتدمير الشعاب المرجانية والتأثير على سلسلة الغذاء البحرية"
     
+    # Include context in the question
+    full_question = f"""السياق: {context}
+
+السؤال: {question}"""
+    
     score, prompt, response = arabic_judge.evaluate_answer(
-        question=question,
+        question=full_question,
         answer=answer,
-        context=context,
         gold=gold
     )
     print(f"Score: {score}")
