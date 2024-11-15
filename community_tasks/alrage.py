@@ -28,8 +28,6 @@ def parse_args():
     parser.add_argument('--temperature', type=float, default=0.7)
     parser.add_argument('--top_p', type=float, default=0.9)
     parser.add_argument('--device_map', type=str, default="auto")
-    parser.add_argument('--test_mode', type=str, choices=['example', 'dataset'], default='example',
-                       help='Whether to test on example or dataset')
     
     return parser.parse_args()
 
@@ -173,69 +171,34 @@ if __name__ == "__main__":
     
     TASKS_TABLE = [alrage_qa_task]
     
-    if args.test_mode == 'example':
-        # Test on separate example
-        question = "ما هو تأثير التلوث على البيئة البحرية؟"
-        context = """التلوث البحري له آثار مدمرة على النظام البيئي البحري. يؤدي إلى موت الكائنات البحرية وتدمير الشعاب المرجانية. كما يؤثر على سلسلة الغذاء البحرية بأكملها."""
-        gold_answer = "التلوث البحري يدمر النظام البيئي البحري من خلال قتل الكائنات البحرية وتدمير الشعاب المرجانية والتأثير على سلسلة الغذاء البحرية"
-        
-        print("\n=== Testing on Example ===")
-        # Generate answer using the model
-        generated_answer = generate_answer(
-            generator=generator,
-            question=question,
-            context=context,
-            args=args
-        )
-        print(f"Question: {question}")
-        print(f"Context: {context}")
-        print(f"Generated Answer: {generated_answer}")
-        print(f"Gold Answer: {gold_answer}")
-        
-        # Evaluate the answer using the judge
-        score, prompt, response = judge.evaluate_answer(
-            question=f"السياق: {context}\n\nالسؤال: {question}",
-            answer=generated_answer,
-            gold=gold_answer
-        )
-        
-        print(f"Score: {score}")
-        print(f"Judge's Response: {response}")
+    # Load and test on ALRAGE dataset
+    print("\n=== Testing on OALL/ALRAGE Dataset ===")
+    dataset = load_dataset("OALL/ALRAGE")
     
-    else:
-        # Test on HF dataset
-        print("\n=== Testing on OALL/ALRAGE Dataset ===")
-        dataset = load_dataset("OALL/ALRAGE")
-        
-        # Test on first example from dataset
-        sample = dataset["train"][0]
-        
-        print(f"Question: {sample['question']}")
-        print(f"Context: {sample['candidates']}")
-        
-        # Generate answer using the model
-        generated_answer = generate_answer(
-            generator=generator,
-            question=sample["question"],
-            context=sample["candidates"],
-            args=args
-        )
-        print(f"Generated Answer: {generated_answer}")
-        print(f"Gold Answer: {sample['gold_answer']}")
-        
-        # Evaluate the answer using the judge
-        score, prompt, response = judge.evaluate_answer(
-            question=f"السؤال: {sample['question']}\n\nالإجابات المقترحة: {sample['candidates']}",
-            answer=generated_answer,
-            gold=sample["gold_answer"]
-        )
-        
-        print(f"Score: {score}")
-        print(f"Judge's Response: {response}")
+    # Test on first example from dataset
+    sample = dataset["train"][0]
+    
+    print(f"Question: {sample['question']}")
+    print(f"Candidates: {sample['candidates']}")
+    
+    # Generate answer using the model
+    generated_answer = generate_answer(
+        generator=generator,
+        question=sample["question"],
+        context=sample["candidates"],
+        args=args
+    )
+    print(f"Generated Answer: {generated_answer}")
+    print(f"Gold Answer: {sample['gold_answer']}")
+    
+    # Evaluate the answer using the judge
+    score, prompt, response = judge.evaluate_answer(
+        question=f"السؤال: {sample['question']}\n\nالإجابات المقترحة: {sample['candidates']}",
+        answer=generated_answer,
+        gold=sample["gold_answer"]
+    )
+    
+    print(f"Score: {score}")
+    print(f"Judge's Response: {response}")    
+#python community_tasks/alrage.py  --model_name "hf_id"
 
-        
-# Test on the example case
-#python community_tasks/alrage.py --test_mode example --model_name "mistralai/Mistral-7B-Instruct-v0.2"
-
-# Test on the OALL/ALRAGE dataset
-#python community_tasks/alrage.py --test_mode dataset --model_name "mistralai/Mistral-7B-Instruct-v0.2"
