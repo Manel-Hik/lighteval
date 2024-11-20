@@ -71,7 +71,7 @@ def process_judge_response(response: str) -> float:
 
 # Initialize the judge metric
 judge = JudgeLM(
-    model="Qwen/Qwen2-7B-Instruct",  
+    model="Qwen/Qwen2.5-7B-Instruct",  
     templates=judge_template,
     process_judge_response=process_judge_response,
     judge_backend="transformers" 
