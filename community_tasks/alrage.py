@@ -34,7 +34,6 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     return Doc(
         task_name=task_name,
         query=query,
-        context=candidates,
         gold_answer=line["gold_answer"],
         instruction=instruction,
     )
