@@ -4,11 +4,15 @@ from lighteval.tasks.requests import Doc
 from lighteval.metrics.llm_as_judge import JudgeLM
 from lighteval.metrics.metrics import MetricCategory  # Import MetricCategory
 
-# Subclassing JudgeLM to add category attribute
-class JudgeWithCategory(JudgeLM):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+# Wrapper class for JudgeLM to include metric_name
+class JudgeMetricWrapper:
+    def __init__(self, judge: JudgeLM):
+        self.judge = judge
+        self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
+
+    def evaluate(self, question: str, answer: str, options: list[str] = None, gold: str = None):
+        return self.judge.evaluate_answer(question, answer, options, gold)
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
@@ -75,13 +79,16 @@ def process_judge_response(response: str) -> float:
     except (StopIteration, ValueError):
         return 0.0
 
-# Initialize the judge metric using the subclass
-judge = JudgeWithCategory(
+# Initialize the judge metric
+judge = JudgeLM(
     model="Qwen/Qwen2.5-7B-Instruct",  
     templates=judge_template,
     process_judge_response=process_judge_response,
     judge_backend="transformers" 
 )
+
+# Wrap the judge in the new wrapper class
+wrapped_judge = JudgeMetricWrapper(judge)
 
 # Create task configuration
 alrage_qa_task = LightevalTaskConfig(
@@ -91,7 +98,7 @@ alrage_qa_task = LightevalTaskConfig(
     hf_repo="OALL/ALRAGE",
     hf_subset=None,
     hf_avail_splits=["train"],
-    metric=[judge],
+    metric=[wrapped_judge],  
     trust_dataset=True,
     version=0
 )
