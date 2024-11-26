@@ -1,8 +1,14 @@
 from typing import List, Dict, Optional
-
 from lighteval.tasks.lighteval_task import LightevalTaskConfig
 from lighteval.tasks.requests import Doc
 from lighteval.metrics.llm_as_judge import JudgeLM
+from lighteval.metrics.metrics import MetricCategory  # Import MetricCategory
+
+# Subclassing JudgeLM to add category attribute
+class JudgeWithCategory(JudgeLM):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
@@ -69,8 +75,8 @@ def process_judge_response(response: str) -> float:
     except (StopIteration, ValueError):
         return 0.0
 
-# Initialize the judge metric
-judge = JudgeLM(
+# Initialize the judge metric using the subclass
+judge = JudgeWithCategory(
     model="Qwen/Qwen2.5-7B-Instruct",  
     templates=judge_template,
     process_judge_response=process_judge_response,
