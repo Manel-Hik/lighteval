@@ -16,43 +16,33 @@ class JudgeMetricWrapper:
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
-    question = line["question"]
+    # Ensure all inputs are strings
+    question = str(line["question"])
     
-    # Split the candidates string into a list
-    candidates = line["candidates"].split('\n')  # Split by newline character
+    # Convert candidates to string if it isn't already
+    if isinstance(line["candidates"], list):
+        candidates = [str(c) for c in line["candidates"]]
+    else:
+        candidates = str(line["candidates"]).split('\n')
     
-    # Remove any empty strings from the list
-    candidates = [candidate.strip() for candidate in candidates if candidate.strip()]
+    # Clean up candidates
+    candidates = [c.strip() for c in candidates if c.strip()]
 
     instruction = "بناءً على السياقات المقترحة التالية، اجب عن السؤال التالي"
     
-    # Ensure that the query is properly formatted
-    query = f"""{instruction}
-
-السؤال:
-{question}
-
-السياقات المقترحة:
-{', '.join(candidates)}  # Join candidates for better readability
-
-الإجابة:"""
+    # Format the query with proper string handling
+    query = f"{instruction}\n\nالسؤال:\n{question}\n\nالسياقات المقترحة:\n{', '.join(candidates)}\n"
     
+    # Ensure gold_answer is a string
+    gold_answer = str(line.get("gold_answer", ""))
     
-    print("Query being tokenized:", query)#for debugging
-
-    # The gold answer is the correct answer
-    gold_answer = line["gold_answer"]
-    
-    # Set choices to a list containing the gold answer
-    choices = [gold_answer]  # Choices now represent the golden answer
-    gold_index = 0  # The index of the gold answer in the choices list
-
+    # Create Doc with proper string types
     return Doc(
-        task_name=task_name,
+        task_name=task_name or "alrage",
         query=query,
         instruction=instruction,
-        choices=choices,  # Set choices to the golden answer
-        gold_index=gold_index  # Index of the golden answer
+        choices=[gold_answer],
+        gold_index=0
     )
     
 def judge_template(question: str, answer: str, gold: str, options: Optional[List[str]] = None) -> List[Dict[str, str]]:
