@@ -17,8 +17,13 @@ class JudgeMetricWrapper:
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
     question = line["question"]
-    candidates = line["candidates"]  # This will provide context for the model
     
+    # Split the candidates string into a list
+    candidates = line["candidates"].split('\n')  # Split by newline character
+    
+    # Remove any empty strings from the list
+    candidates = [candidate for candidate in candidates if candidate.strip()]
+
     instruction = "بناءً على السياقات المقترحة التالية، اجب عن السؤال التالي"
     
     query = f"""{instruction}
@@ -27,7 +32,7 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
 {question}
 
 السياقات المقترحة:
-{candidates}
+{', '.join(candidates)}  # Join candidates for better readability
 
 الإجابة:"""
 
@@ -45,6 +50,7 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
         choices=choices,  # Set choices to the golden answer
         gold_index=gold_index  # Index of the golden answer
     )
+    
 def judge_template(question: str, answer: str, gold: str, options: Optional[List[str]] = None) -> List[Dict[str, str]]:
     """Template for the judge prompt in Arabic"""
     messages = [
