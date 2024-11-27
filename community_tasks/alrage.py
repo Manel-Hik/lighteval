@@ -22,10 +22,11 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     candidates = line["candidates"].split('\n')  # Split by newline character
     
     # Remove any empty strings from the list
-    candidates = [candidate for candidate in candidates if candidate.strip()]
+    candidates = [candidate.strip() for candidate in candidates if candidate.strip()]
 
     instruction = "بناءً على السياقات المقترحة التالية، اجب عن السؤال التالي"
     
+    # Ensure that the query is properly formatted
     query = f"""{instruction}
 
 السؤال:
@@ -35,6 +36,9 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
 {', '.join(candidates)}  # Join candidates for better readability
 
 الإجابة:"""
+    
+    
+    print("Query being tokenized:", query)#for debugging
 
     # The gold answer is the correct answer
     gold_answer = line["gold_answer"]
