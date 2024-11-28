@@ -13,11 +13,11 @@ class JudgeMetricWrapper:
     def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
         """
         Compute the score using the judge's evaluate_answer method.
-
+        
         Args:
             predictions (list[str]): The predicted answers.
             formatted_docs (list[Doc]): The formatted documents containing questions and gold answers.
-
+        
         Returns:
             dict[str, float]: A dictionary containing the evaluation scores.
         """
@@ -109,7 +109,7 @@ judge = JudgeLM(
     model="Qwen/Qwen2.5-7B-Instruct",  
     templates=judge_template,
     process_judge_response=process_judge_response,
-    judge_backend="transformers" 
+    judge_backend="vllm" 
 )
 
 # Wrap the judge in the new wrapper class
