@@ -4,15 +4,33 @@ from lighteval.tasks.requests import Doc
 from lighteval.metrics.llm_as_judge import JudgeLM
 from lighteval.metrics.metrics import MetricCategory  # Import MetricCategory
 
-# Wrapper class for JudgeLM to include metric_name
 class JudgeMetricWrapper:
     def __init__(self, judge: JudgeLM):
         self.judge = judge
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
 
-    def evaluate(self, question: str, answer: str, options: list[str] = None, gold: str = None):
-        return self.judge.evaluate_answer(question, answer, options, gold)
+    def compute(self, predictions: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
+        """
+        Compute the score using the judge's evaluate_answer method.
+        
+        Args:
+            predictions (list[str]): The predicted answers.
+            formatted_docs (list[Doc]): The formatted documents containing questions and gold answers.
+        
+        Returns:
+            dict[str, float]: A dictionary containing the evaluation scores.
+        """
+        scores = []
+        for i, doc in enumerate(formatted_docs):
+            question = doc.specific["question"]
+            gold = doc.choices[doc.gold_index[0]] if doc.gold_index else None
+            answer = predictions[i]
+            
+            score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
+            scores.append(score)
+
+        return {"scores": scores}
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
@@ -107,6 +125,8 @@ alrage_qa_task = LightevalTaskConfig(
     evaluation_splits=["train"],  
     metric=[wrapped_judge],  
     trust_dataset=True,
+    generation_size=-1,  ## updated
+    stop_sequence=[],  ## updated
     version=0
 )
 
