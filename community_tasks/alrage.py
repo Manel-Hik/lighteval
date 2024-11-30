@@ -33,6 +33,10 @@ class JudgeMetricWrapper:
             print(f"  Question: {question}")  # Debugging print
             print(f"  Gold Answer: {gold}")  # Debugging print
             print(f"  Predicted Answer: {answer}")  # Debugging print
+            if gold is None:
+                print(f"Warning: Gold answer for document {i} is None.")  # Debugging print
+                continue  # Skip this document or handle it as needed
+
 
             # Directly use judge.evaluate_answer here
             score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
