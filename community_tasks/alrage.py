@@ -10,7 +10,7 @@ class JudgeMetricWrapper:
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
 
-    def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
+    def compute(self, predictions: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
         """
         Compute the score using the judge's evaluate_answer method.
         
@@ -22,16 +22,28 @@ class JudgeMetricWrapper:
             dict[str, float]: A dictionary containing the evaluation scores.
         """
         scores = []
-        for i, doc in enumerate(formatted_docs):
-            # question = doc.specific["question"]
-            question = doc.query
-            gold = doc.choices[doc.gold_index[0]] if doc.gold_index else None
-            answer = responses[i]
+        print("Starting computation of scores...")  # Debugging print
 
+        for i, doc in enumerate(formatted_docs):
+            question = doc.specific["question"]
+            gold = doc.choices[doc.gold_index[0]] if doc.gold_index else None
+            answer = predictions[i]
+
+            print(f"Processing document {i}:")  # Debugging print
+            print(f"  Question: {question}")  # Debugging print
+            print(f"  Gold Answer: {gold}")  # Debugging print
+            print(f"  Predicted Answer: {answer}")  # Debugging print
+
+            # Directly use judge.evaluate_answer here
             score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
             scores.append(score)
 
-        return {"scores": scores}
+            print(f"  Score for document {i}: {score}")  # Debugging print
+
+        # Return a dictionary with a key that can be accessed
+        result = {"scores": scores}
+        print("Computed scores:", result)  # Debugging print
+        return result
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
