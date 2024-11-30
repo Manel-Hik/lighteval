@@ -10,7 +10,7 @@ class JudgeMetricWrapper:
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
 
-    def compute(self, predictions: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
+    def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
         """
         Compute the score using the judge's evaluate_answer method.
         
@@ -25,9 +25,9 @@ class JudgeMetricWrapper:
         print("Starting computation of scores...")  # Debugging print
 
         for i, doc in enumerate(formatted_docs):
-            question = doc.specific["question"]
+            question = doc.query
             gold = doc.choices[doc.gold_index[0]] if doc.gold_index else None
-            answer = predictions[i]
+            answer = responses[i]
 
             print(f"Processing document {i}:")  # Debugging print
             print(f"  Question: {question}")  # Debugging print
