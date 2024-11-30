@@ -45,9 +45,13 @@ class JudgeMetricWrapper:
         print("Computed scores:", result)  # Debugging print
         return result
 
+
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
-    # Ensure all inputs are strings
+    
+    # Check the input line structure
+    print("Input line:", line)  # Debugging print
+
     question = str(line["question"])
     
     # Convert candidates to string if it isn't already
@@ -60,21 +64,25 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     candidates = [c.strip() for c in candidates if c.strip()]
 
     instruction = "بناءً على السياقات المقترحة التالية، اجب عن السؤال التالي"
-    
-    # Format the query with proper string handling
     query = f"{instruction}\n\nالسؤال:\n{question}\n\nالسياقات المقترحة:\n{', '.join(candidates)}\n"
     
     # Ensure gold_answer is a string
-    gold_answer = str(line.get("gold_answer", ""))
-    
+    gold_answer = str(line.get("gold_answer", ""))  # Ensure this is set correctly
+    print("Gold Answer:", gold_answer)  # Debugging print
+
     # Create Doc with proper string types
-    return Doc(
+    doc = Doc(
         task_name=task_name or "alrage",
         query=query,
         instruction=instruction,
-        choices=[gold_answer],
+        choices=[gold_answer],  # Ensure this is populated correctly
         gold_index=0
     )
+
+    # Print the created Doc for verification
+    print("Created Doc:", doc)  # Debugging print
+
+    return doc
     
 def judge_template(question: str, answer: str, gold: str, options: Optional[List[str]] = None) -> List[Dict[str, str]]:
     """Template for the judge prompt in Arabic"""
