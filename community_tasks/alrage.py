@@ -98,12 +98,16 @@ def judge_template(question: str, answer: str, gold: str, options: Optional[List
 
 def process_judge_response(response) -> float:
     """Process the judge's response to extract the score"""
-    # If response is a list, join it into a single string
+    # If response is a list, extract the content from the user role
     if isinstance(response, list):
-        response = ' '.join(response)  # Join list elements into a single string
+        # Join the content from the user role into a single string
+        response_content = ' '.join(item['content'] for item in response if item['role'] == 'user')
+    else:
+        response_content = response  # If it's not a list, use it directly
 
     try:
-        score = float(next(num for num in response.split() if num.replace('.', '', 1).isdigit()))
+        # Extract the score from the response content
+        score = float(next(num for num in response_content.split() if num.replace('.', '', 1).isdigit()))
         return min(max(score / 10.0, 0.0), 1.0)
     except (StopIteration, ValueError):
         return 0.0
