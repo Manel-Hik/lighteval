@@ -26,7 +26,7 @@ class JudgeMetricWrapper:
 
         for i, doc in enumerate(formatted_docs):
             question = doc.query
-            gold = doc.choices[doc.gold_index[0]] if doc.gold_index else None
+            gold = doc.choices[doc.gold_index] if doc.gold_index is not None else None
             answer = responses[i]
 
             print(f"Processing document {i}:")  # Debugging print
