@@ -3,6 +3,7 @@ from lighteval.tasks.lighteval_task import LightevalTaskConfig
 from lighteval.tasks.requests import Doc
 from lighteval.metrics.llm_as_judge import JudgeLM
 from lighteval.metrics.metrics import MetricCategory, Metric  # Import MetricCategory and Metric
+from lighteval.metrics.utils.metric_utils import MetricUseCase
 
 class JudgeMetricWrapper(Metric):  # Extend from Metric
     def __init__(self, judge: JudgeLM):
@@ -10,6 +11,11 @@ class JudgeMetricWrapper(Metric):  # Extend from Metric
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
         self.corpus_level_fn = self.aggregate_scores  # Define the corpus level function
+        self.sample_level_fn = lambda x: x["score"]
+        self.higher_is_better= True,
+        self.use_case = MetricUseCase.NONE
+        
+
 
     def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
         """
