@@ -2,13 +2,14 @@ from typing import List, Dict, Optional
 from lighteval.tasks.lighteval_task import LightevalTaskConfig
 from lighteval.tasks.requests import Doc
 from lighteval.metrics.llm_as_judge import JudgeLM
-from lighteval.metrics.metrics import MetricCategory  # Import MetricCategory
+from lighteval.metrics.metrics import MetricCategory, Metric  # Import MetricCategory and Metric
 
-class JudgeMetricWrapper:
+class JudgeMetricWrapper(Metric):  # Extend from Metric
     def __init__(self, judge: JudgeLM):
         self.judge = judge
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
+        self.corpus_level_fn = self.aggregate_scores  # Define the corpus level function
 
     def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
         """
@@ -21,42 +22,29 @@ class JudgeMetricWrapper:
         Returns:
             dict[str, float]: A dictionary containing the evaluation scores.
         """
-        scores = []
-        print("Starting computation of scores...")  # Debugging print
-
+        results = []
         for i, doc in enumerate(formatted_docs):
             question = doc.query
             gold = doc.choices[doc.gold_index] if doc.gold_index is not None else None
-            answer = responses[i]
-
-            print(f"Processing document {i}:")  # Debugging print
-            print(f"  Question: {question}")  # Debugging print
-            print(f"  Gold Answer: {gold}")  # Debugging print
-            print(f"  Predicted Answer: {answer}")  # Debugging print
-            print(f"    Result: {answer.result}")
-            
-            if gold is None:
-                print(f"Warning: Gold answer for document {i} is None.")  # Debugging print
-                continue  # Skip this document or handle it as needed
+            answer = responses[i][0].result[0]
 
 
             # Directly use judge.evaluate_answer here
             score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
-            scores.append(score)
 
-            print(f"  Score for document {i}: {score}")  # Debugging print
-
+            results.append({"score": score})
         # Return a dictionary with a key that can be accessed
-        result = {"scores": scores}
-        print("Computed scores:", result)  # Debugging print
-        return result
+        return results
+
+    def aggregate_scores(self, scores: list[dict]) -> float:
+        """Aggregate scores from the compute method."""
+        return sum(score["score"] for score in scores) / len(scores) if scores else 0.0
 
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
     
     # Check the input line structure
-    print("Input line:", line)  # Debugging print
 
     question = str(line["question"])
     
@@ -74,7 +62,6 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     
     # Ensure gold_answer is a string
     gold_answer = str(line.get("gold_answer", ""))  # Ensure this is set correctly
-    print("Gold Answer:", gold_answer)  # Debugging print
 
     # Create Doc with proper string types
     doc = Doc(
@@ -82,11 +69,8 @@ def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
         query=query,
         instruction=instruction,
         choices=[gold_answer],  # Ensure this is populated correctly
-        gold_index=0
+        gold_index= 0
     )
-
-    # Print the created Doc for verification
-    print("Created Doc:", doc)  # Debugging print
 
     return doc
     
@@ -160,7 +144,7 @@ alrage_qa_task = LightevalTaskConfig(
     evaluation_splits=["train"],  
     metric=[wrapped_judge],  
     trust_dataset=True,
-    generation_size=-1,  ## updated
+    generation_size=200,  ## updated
     stop_sequence=[],  ## updated
     version=0
 )
