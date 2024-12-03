@@ -11,7 +11,7 @@ class JudgeMetricWrapper(Metric):  # Extend from Metric
         self.metric_name = "llm_as_judge"  # Define a metric name
         self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
         self.corpus_level_fn = self.aggregate_scores  # Define the corpus level function
-        self.sample_level_fn = lambda x: x["score"]
+        self.sample_level_fn = self._sample_level_fn
         self.higher_is_better= True,
         self.use_case = MetricUseCase.NONE
         
@@ -38,14 +38,16 @@ class JudgeMetricWrapper(Metric):  # Extend from Metric
             # Directly use judge.evaluate_answer here
             score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
 
-            results.append({"score": score})
+            results.append({self.metric_name: score})
         # Return a dictionary with a key that can be accessed
         return results
 
     def aggregate_scores(self, scores: list[dict]) -> float:
         """Aggregate scores from the compute method."""
-        return sum(score["score"] for score in scores) / len(scores) if scores else 0.0
+        return sum(scores) / len(scores) if scores else 0.0
 
+    def _sample_level_fn(self):
+        return None
 
 def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
     """Format the prompt for question answering with candidates"""
