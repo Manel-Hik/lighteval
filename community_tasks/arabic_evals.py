@@ -28,12 +28,14 @@ This file generally creates just a TASKS_TABLE and TASKS_GROUPS which are then i
 """
 import random
 import re
-
+from typing import List, Dict, Optional
 from lighteval.metrics.metrics import Metrics
 from lighteval.tasks.default_prompts import LETTER_INDICES
 from lighteval.tasks.lighteval_task import LightevalTaskConfig
 from lighteval.tasks.requests import Doc
-
+from lighteval.metrics.llm_as_judge import JudgeLM
+from lighteval.metrics.metrics import MetricCategory, Metric  # Import MetricCategory and Metric
+from lighteval.metrics.utils.metric_utils import MetricUseCase
 
 # fmt: off
 LETTER_INDICES_AR = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي", "ك", "ل", "م", "ن", "س", "ع", "ف", "ص", "ق", "ر", "ش", "ت", "ث", "خ", "ذ", "ض", "ظ", "غ"]
@@ -52,7 +54,6 @@ ARABIC_MMLU_SUBSETS = [
     "professional_medicine", "professional_psychology", "public_relations", "security_studies", "sociology", "us_foreign_policy", "virology", "world_religions"
 ]
 # fmt: on
-
 
 def mmlu_arabic(line, task_name: str = None):
     topic = line["subject"]
@@ -74,7 +75,6 @@ def mmlu_arabic(line, task_name: str = None):
         instruction=instruction,
         target_for_fewshot_sorting=LETTER_INDICES_AR[gold_ix],
     )
-
 
 class CustomArabicMMLUTask(LightevalTaskConfig):
     def __init__(
@@ -101,7 +101,6 @@ class CustomArabicMMLUTask(LightevalTaskConfig):
             version=0,
         )
 
-
 ARABIC_MMLU_TASKS = [
     CustomArabicMMLUTask(name=f"arabic_mmlu:{subset}", hf_subset=subset) for subset in ARABIC_MMLU_SUBSETS
 ]
@@ -120,7 +119,6 @@ ACVA_SUBSETS = [
 ]
 # fmt: on
 
-
 def acva(line, task_name: str = None):
     question = line["question"]
     answer = line["answer"]
@@ -131,7 +129,6 @@ def acva(line, task_name: str = None):
         choices=["صح", "خطأ"],
         gold_index=["صح", "خطأ"].index(answer),
     )
-
 
 class CustomACVATask(LightevalTaskConfig):
     def __init__(
@@ -158,9 +155,7 @@ class CustomACVATask(LightevalTaskConfig):
             version=0,
         )
 
-
 ACVA_TASKS = [CustomACVATask(name=f"acva:{subset}", hf_subset=subset) for subset in ACVA_SUBSETS]
-
 
 def arabic_exams(line, task_name: str = None):
     topic = line["subject"]
@@ -184,7 +179,6 @@ def arabic_exams(line, task_name: str = None):
         target_for_fewshot_sorting=choices[answer_index],
     )
 
-
 # ARABIC EXAMS ##
 arabic_exams_task = LightevalTaskConfig(
     name="arabic_exams",
@@ -201,7 +195,6 @@ arabic_exams_task = LightevalTaskConfig(
     version=0,
 )
 
-
 # ALGHAFA NATIVE ##
 # fmt: off
 ALGHAFA_SUBSETS = [
@@ -210,7 +203,6 @@ ALGHAFA_SUBSETS = [
     "multiple_choice_sentiment_task"
 ]
 # fmt: on
-
 
 def alghafa_prompt(line, task_name: str = None):
     question = line["query"]
@@ -233,7 +225,6 @@ def alghafa_prompt(line, task_name: str = None):
         instruction=instruction,
         target_for_fewshot_sorting=choices[answer_index],
     )
-
 
 class CustomAlGhafaNativeTask(LightevalTaskConfig):
     def __init__(
@@ -259,7 +250,6 @@ class CustomAlGhafaNativeTask(LightevalTaskConfig):
             version=0,
         )
 
-
 ALGHAFA_TASKS = [CustomAlGhafaNativeTask(name=f"alghafa:{subset}", hf_subset=subset) for subset in ALGHAFA_SUBSETS]
 
 # ALGHAFA TRANSLATED ##
@@ -279,7 +269,6 @@ race_ar_task = LightevalTaskConfig(
     version=0,
 )
 
-
 # piqa_ar
 piqa_ar_task = LightevalTaskConfig(
     name="piqa_ar",
@@ -295,7 +284,6 @@ piqa_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # arc_easy_ar
 arc_easy_ar_task = LightevalTaskConfig(
@@ -313,7 +301,6 @@ arc_easy_ar_task = LightevalTaskConfig(
     version=0,
 )
 
-
 # arc_challenge_okapi_ar
 arc_challenge_okapi_ar_task = LightevalTaskConfig(
     name="arc_challenge_okapi_ar",
@@ -329,7 +316,6 @@ arc_challenge_okapi_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # mmlu_okapi_ar
 mmlu_okapi_ar_task = LightevalTaskConfig(
@@ -347,7 +333,6 @@ mmlu_okapi_ar_task = LightevalTaskConfig(
     version=0,
 )
 
-
 # openbook_qa_ext_ar
 openbook_qa_ext_ar_task = LightevalTaskConfig(
     name="openbook_qa_ext_ar",
@@ -364,10 +349,7 @@ openbook_qa_ext_ar_task = LightevalTaskConfig(
     version=0,
 )
 
-
 # boolq_ar
-
-
 def boolq_prompt_arabic(line, task_name: str = None):
     question = line["question"]
     passage = line["passage"]
@@ -390,7 +372,6 @@ def boolq_prompt_arabic(line, task_name: str = None):
         target_for_fewshot_sorting=answer,
     )
 
-
 boolq_ar_task = LightevalTaskConfig(
     name="boolq_ar",
     prompt_function=boolq_prompt_arabic,
@@ -405,7 +386,6 @@ boolq_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # copa_ext_ar
 def copa_prompt_arabic(line, task_name: str = None):
@@ -426,7 +406,6 @@ def copa_prompt_arabic(line, task_name: str = None):
         target_for_fewshot_sorting=choices[answer],
     )
 
-
 copa_ext_ar_task = LightevalTaskConfig(
     name="copa_ext_ar",
     prompt_function=copa_prompt_arabic,
@@ -441,7 +420,6 @@ copa_ext_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # hellaswag_okapi_ar
 def hellaswag_prompt_arabic(line, task_name: str = None):
@@ -471,7 +449,6 @@ def hellaswag_prompt_arabic(line, task_name: str = None):
         target_for_fewshot_sorting=endings[answer_index],
     )
 
-
 hellaswag_okapi_ar_task = LightevalTaskConfig(
     name="hellaswag_okapi_ar",
     prompt_function=hellaswag_prompt_arabic,
@@ -486,7 +463,6 @@ hellaswag_okapi_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # toxigen_ar
 def toxigen_prompt_arabic(line, task_name: str = None):
@@ -509,7 +485,6 @@ def toxigen_prompt_arabic(line, task_name: str = None):
         target_for_fewshot_sorting="نعم" if label == 1 else "لا",
     )
 
-
 toxigen_ar_task = LightevalTaskConfig(
     name="toxigen_ar",
     prompt_function=toxigen_prompt_arabic,
@@ -524,7 +499,6 @@ toxigen_ar_task = LightevalTaskConfig(
     trust_dataset=True,
     version=0,
 )
-
 
 # sciq_ar
 def sciq_prompt_arabic(line, task_name: str = None):
@@ -561,7 +535,6 @@ def sciq_prompt_arabic(line, task_name: str = None):
         target_for_fewshot_sorting=choices[answer_index],
     )
 
-
 sciq_ar_task = LightevalTaskConfig(
     name="sciq_ar",
     prompt_function=sciq_prompt_arabic,
@@ -577,6 +550,155 @@ sciq_ar_task = LightevalTaskConfig(
     version=0,
 )
 
+# INTEGRATED CODE FROM ALRAGE.PY
+class JudgeMetricWrapper(Metric):  # Extend from Metric
+    def __init__(self, judge: JudgeLM):
+        self.judge = judge
+        self.metric_name = "llm_as_judge"  # Define a metric name
+        self.category = MetricCategory.LLM_AS_JUDGE  # Add the category attribute
+        self.corpus_level_fn = self.aggregate_scores  # Define the corpus level function
+        self.sample_level_fn = self._sample_level_fn
+        self.higher_is_better= True,
+        self.use_case = MetricUseCase.NONE
+
+    def compute(self, responses: list[str], formatted_docs: list[Doc], **kwargs) -> dict[str, float]:
+        """
+        Compute the score using the judge's evaluate_answer method.
+        
+        Args:
+            predictions (list[str]): The predicted answers.
+            formatted_docs (list[Doc]): The formatted documents containing questions and gold answers.
+        
+        Returns:
+            dict[str, float]: A dictionary containing the evaluation scores.
+        """
+        results = []
+        for i, doc in enumerate(formatted_docs):
+            question = doc.query
+            gold = doc.choices[doc.gold_index] if doc.gold_index is not None else None
+            answer = responses[i][0].result[0]
+
+            # Directly use judge.evaluate_answer here
+            score, _, _ = self.judge.evaluate_answer(question, answer, options=None, gold=gold)
+
+            results.append({self.metric_name: score})
+        # Return a dictionary with a key that can be accessed
+        return results
+
+    def aggregate_scores(self, scores: list[dict]) -> float:
+        """Aggregate scores from the compute method."""
+        return sum(scores) / len(scores) if scores else 0.0
+
+    def _sample_level_fn(self):
+        return None
+
+def qa_prompt_arabic(line: Dict, task_name: str = None) -> Doc:
+    """Format the prompt for question answering with candidates"""
+    
+    # Check the input line structure
+
+    question = str(line["question"])
+    
+    # Convert candidates to string if it isn't already
+    if isinstance(line["candidates"], list):
+        candidates = [str(c) for c in line["candidates"]]
+    else:
+        candidates = str(line["candidates"]).split('\n')
+    
+    # Clean up candidates
+    candidates = [c.strip() for c in candidates if c.strip()]
+
+    instruction = "بناءً على السياقات المقترحة التالية، اجب عن السؤال التالي"
+    query = f"{instruction}\n\nالسؤال:\n{question}\n\nالسياقات المقترحة:\n{', '.join(candidates)}\n"
+    
+    # Ensure gold_answer is a string
+    gold_answer = str(line.get("gold_answer", ""))  # Ensure this is set correctly
+
+    # Create Doc with proper string types
+    doc = Doc(
+        task_name=task_name or "alrage",
+        query=query,
+        instruction=instruction,
+        choices=[gold_answer],  # Ensure this is populated correctly
+        gold_index= 0
+    )
+
+    return doc
+    
+def judge_template(question: str, answer: str, gold: str, options: Optional[List[str]] = None) -> List[Dict[str, str]]:
+    """Template for the judge prompt in Arabic"""
+    messages = [
+        {
+            "role": "system", 
+            "content": """أنت مقيّم محايد خبير. مهمتك هي:
+1. تقييم دقة الإجابة مقارنة بالإجابة الصحيحة
+2. التحقق من أن الإجابة مدعومة بالسياق المقدم
+3. تقييم جودة وشمولية الإجابة
+
+قم بتقييم الإجابة على مقياس من 0 إلى 10."""
+        },
+        {
+            "role": "user", 
+            "content": f"""{question}
+
+الإجابة المقدمة: {answer}
+
+الإجابة الصحيحة: {gold}
+
+قيّم الإجابة على مقياس من 0 إلى 10، حيث:
+- 0-2: إجابة خاطئة تماماً أو غير متعلقة
+- 3-4: إجابة جزئية مع أخطاء كبيرة
+- 5-6: إجابة متوسطة الدقة
+- 7-8: إجابة جيدة مع بعض النقص
+- 9-10: إجابة ممتازة ودقيقة
+
+قدم تقييمك كرقم فقط."""
+        }
+    ]
+    return messages
+
+def process_judge_response(response) -> float:
+    """Process the judge's response to extract the score"""
+    # If response is a list, extract the content from the user role
+    if isinstance(response, list):
+        # Join the content from the user role into a single string
+        response_content = ' '.join(item['content'] for item in response if item['role'] == 'user')
+    else:
+        response_content = response  # If it's not a list, use it directly
+
+    try:
+        # Extract the score from the response content
+        score = float(next(num for num in response_content.split() if num.replace('.', '', 1).isdigit()))
+        return min(max(score / 10.0, 0.0), 1.0)
+    except (StopIteration, ValueError):
+        return 0.0
+
+# Initialize the judge metric
+judge = JudgeLM(
+    model="Qwen/Qwen2.5-7B-Instruct",  
+    templates=judge_template,
+    process_judge_response=process_judge_response,
+    judge_backend="vllm" 
+)
+
+# Wrap the judge in the new wrapper class
+wrapped_judge = JudgeMetricWrapper(judge)
+
+# Create task configuration
+alrage_qa_task = LightevalTaskConfig(
+    name="alrage_qa",
+    prompt_function=qa_prompt_arabic,
+    suite=["community"],
+    hf_repo="OALL/ALRAGE",
+    hf_subset=None,
+    hf_avail_splits=["train"],  # Only the train split is available
+    evaluation_splits=["train"],  
+    metric=[wrapped_judge],  
+    trust_dataset=True,
+    generation_size=200,  ## updated
+    stop_sequence=[],  ## updated
+    version=0
+)
 
 TASKS_TABLE = (
     ARABIC_MMLU_TASKS
@@ -594,6 +716,7 @@ TASKS_TABLE = (
     + [hellaswag_okapi_ar_task]
     + [toxigen_ar_task]
     + [sciq_ar_task]
+    + [alrage_qa_task]  # Added the alrage task to the TASKS_TABLE
 )
 
 if __name__ == "__main__":
